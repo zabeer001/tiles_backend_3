@@ -21,4 +21,10 @@ class Tile extends Model
                     ->withPivot('priority')
                     ->withTimestamps();
     }
+    public function colors()
+    {
+        return $this->belongsToMany(Color::class, 'color_tiles', 'tile_id', 'color_id')
+                    ->withPivot('priority')
+                    ->withTimestamps();
+    }
 }

@@ -50,6 +50,7 @@ class TileController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request);
         // Validate the incoming request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -57,13 +58,18 @@ class TileController extends Controller
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'category_id' => 'required|array',
-            'category_id.*' => 'exists:categories,id', // Ensure each category ID exists
+            'category_id.*' => 'exists:categories,id',
+            'color_id' => 'nullable|array',
+            'color_id.*' => 'exists:colors,id',
         ]);
-
+    
         try {
-            // Handle image upload
-            $imagePath = HelperMethods::uploadImage($request->file('image'));
-
+            // Handle image upload if present
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = HelperMethods::uploadImage($request->file('image'));
+            }
+    
             // Create a new tile
             $tile = Tile::create([
                 'name' => $validated['name'],
@@ -71,16 +77,22 @@ class TileController extends Controller
                 'description' => $validated['description'],
                 'image' => $imagePath,
             ]);
-
-            // Sync categories
+    
+            // Sync relationships
             $tile->categories()->sync($validated['category_id']);
-
-            return $this->responseSuccess($tile->load('categories'), 'Tile created successfully', 201);
+            $tile->colors()->sync($validated['color_id'] ?? []);
+    
+            return $this->responseSuccess(
+                $tile->load(['categories', 'colors']),
+                'Tile created successfully',
+                201
+            );
         } catch (\Exception $e) {
             Log::error('Error creating tile: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
                 'error' => $e->getTraceAsString(),
             ]);
+    
             return $this->responseError('Something went wrong', $e->getMessage(), 500);
         }
     }
@@ -175,13 +187,43 @@ class TileController extends Controller
 
     public function search(Request $request)
     {
-        // return 'hi';
-        $query = $request->input('q');
+        // Validate query parameters
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'category' => 'nullable|string|exists:categories,name', // Assumes categories table has a 'name' column
+            'color' => 'nullable|string|exists:colors,name', // Assumes categories table has a 'name' column
+        ]);
 
-        $tile = Tile::with('categories')
-            ->where('name', $query)
-            ->first(); // Use `first()` to return a single tile, not a list
+        // Get query parameters
+        $search = $validated['search'] ?? null;
+        $category = $validated['category'] ?? null;
+        $color = $validated['color'] ?? null;
 
+        // Build the query
+        $query = Tile::with('categories'); // Eager load categories relationship
+
+        // Apply search filter (partial match on name)
+        if ($search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        // Apply category filter (assuming tiles belong to categories via relationship)
+        if ($category) {
+            $query->whereHas('categories', function ($q) use ($category) {
+                $q->where('name', $category); // Match category name
+            });
+        }
+
+        if($color){
+            $query->whereHas('colors', function ($q) use ($color) {
+                $q->where('name', $color); // Match category name
+            });
+        }
+
+        // Retrieve the first matching tile
+        $tile = $query->first();
+
+        // Handle case where no tile is found
         if (!$tile) {
             return response()->json([
                 'success' => false,
@@ -190,10 +232,11 @@ class TileController extends Controller
             ], 404);
         }
 
+        // Return the found tile
         return response()->json([
             'success' => true,
             'message' => 'Tile retrieved successfully',
             'data' => $tile,
-        ]);
+        ], 200);
     }
 }

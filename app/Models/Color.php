@@ -13,4 +13,11 @@ class Color extends Model
         'code',
         'image',
     ];
+
+    public function tiles()
+    {
+        return $this->belongsToMany(Tile::class, 'color_tiles', 'color_id', 'tile_id')
+            ->withPivot('priority')
+            ->withTimestamps();
+    }
 }
