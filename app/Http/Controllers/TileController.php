@@ -175,7 +175,7 @@ class TileController extends Controller
 
     public function search(Request $request)
     {
-        return 'hi';
+        // return 'hi';
         $query = $request->input('q');
 
         $tile = Tile::with('categories')
