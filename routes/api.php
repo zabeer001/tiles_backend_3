@@ -13,6 +13,7 @@ Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api')
 
 // Protected routes
 
- Route::apiResource('categories', CategoryController::class);
+Route::apiResource('categories', CategoryController::class);
 Route::apiResource('colors', ColorController::class);
- Route::apiResource('tiles', TileController::class);
+Route::apiResource('tiles', TileController::class);
+Route::get('tiles/search', [TileController::class, 'search']);

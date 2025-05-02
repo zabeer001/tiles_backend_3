@@ -12,7 +12,7 @@ class TileController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update','destroy']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy']);
     }
 
 
@@ -24,7 +24,7 @@ class TileController extends Controller
         try {
             // Retrieve all tiles with their categories
             $tiles = Tile::with('categories')->paginate(10);
-    
+
             return response()->json([
                 'data' => $tiles,
                 'current_page' => $tiles->currentPage(),
@@ -43,7 +43,7 @@ class TileController extends Controller
             ], 500);
         }
     }
-    
+
 
     /**
      * Store a newly created tile in storage.
@@ -171,5 +171,29 @@ class TileController extends Controller
             ]);
             return $this->responseError('Failed to delete tile', $e->getMessage(), 500);
         }
+    }
+
+    public function search(Request $request)
+    {
+        return 'hi';
+        $query = $request->input('q');
+
+        $tile = Tile::with('categories')
+            ->where('name', $query)
+            ->first(); // Use `first()` to return a single tile, not a list
+
+        if (!$tile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tile not found',
+                'data' => null,
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tile retrieved successfully',
+            'data' => $tile,
+        ]);
     }
 }
