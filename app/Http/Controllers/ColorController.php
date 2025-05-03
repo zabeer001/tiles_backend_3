@@ -109,37 +109,53 @@ class ColorController extends Controller
         // Validate the incoming request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:255', // Code is optional
+            'code' => 'nullable|string|max:255', // Color code is optional
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image is optional
-            'status' => 'nullable|string|max:255',
+            'status' => 'nullable|string|max:255', // Status is optional
         ]);
-
-
-
+    
         try {
             // Find the existing color by ID
             $color = Color::findOrFail($id);
-            // Update the color's fields
-            $color->name = $validated['name'];
-            $color->code = $validated['code'];
-            $color->status = $validated['status'];
-            $color->image = HelperMethods::updateImage($request, $color);  // Use the existing updateImage method
-            $color->save();
-
-
-
-
-            // Return success response using colorsResource
-            return $this->responseSuccess($color, 'Tile updated successfully', 201);
+    
+            // Prepare update data
+            $updateData = [
+                'name' => $validated['name'],
+            ];
+    
+            // Only update code if provided, and set image to null
+            if ($request->filled('code')) {
+                $updateData['code'] = $validated['code'];
+                $updateData['image'] = null;
+            }
+    
+            // Only update status if provided
+            if ($request->filled('status')) {
+                $updateData['status'] = $validated['status'];
+            }
+    
+            // Handle image update (if provided), and set code to null
+            $imagePath = HelperMethods::updateImage($request, $color);
+            if ($imagePath) {
+                $updateData['image'] = $imagePath;
+                $updateData['code'] = null;
+            }
+    
+            // Update the color
+            $color->update($updateData);
+    
+            // Return success response
+            return $this->responseSuccess($color, 'Color updated successfully', 200);
         } catch (\Exception $e) {
             // Log the error with additional context
             Log::error('Error updating color: ' . $e->getMessage(), [
+                'color_id' => $id,
                 'request_data' => $request->all(),
                 'error' => $e->getTraceAsString(),
             ]);
-
+    
             // Return error response
-            return $this->responseError('Something went wrong', $e->getMessage(), 500);
+            return $this->responseError('Failed to update color', $e->getMessage(), 500);
         }
     }
     /**

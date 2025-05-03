@@ -32,7 +32,7 @@ class CategoryController extends Controller
         try {
             $query = DB::table('categories')
                 ->select('categories.*')
-                ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles');
+                ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles_count');
     
             if ($search) {
                 $query->where('name', 'like', $search . '%');
