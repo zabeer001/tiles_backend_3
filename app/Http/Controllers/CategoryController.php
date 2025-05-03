@@ -13,21 +13,33 @@ class CategoryController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy','statusUpdate']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy', 'statusUpdate']);
     }
 
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $validated = $request->validate([
+            'paginate_count' => 'nullable|integer|min:1',
+            'search' => 'nullable|string|max:255',
+        ]);
+    
+        $search = $validated['search'] ?? null;
+        $paginate_count = $validated['paginate_count'] ?? 10;
+    
         try {
-            $categories = DB::table('categories')
+            $query = DB::table('categories')
                 ->select('categories.*')
-                ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles')
-                ->paginate(10);
-
-
+                ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles');
+    
+            if ($search) {
+                $query->where('name', 'like', $search . '%');
+            }
+    
+            $categories = $query->paginate($paginate_count);
+    
             return response()->json([
                 'data' => $categories,
                 'current_page' => $categories->currentPage(),
@@ -144,14 +156,14 @@ class CategoryController extends Controller
         $request->validate([
             'status' => 'required|string' // Adjust allowed values as needed
         ]);
-    
+
         // Find the category by ID
         $category = Category::findOrFail($id);
-    
+
         // Update the status
         $category->status = $request->input('status');
         $category->save();
-    
+
         // Return a success response
         return response()->json([
             'message' => 'Category status updated successfully',
