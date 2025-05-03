@@ -32,6 +32,7 @@ class TileController extends Controller
                 'per_page' => $tiles->perPage(),
                 'total' => $tiles->total(),
                 'message' => 'Tiles retrieved successfully',
+                'success' => true,
             ]);
         } catch (\Exception $e) {
             Log::error('Error retrieving tiles: ' . $e->getMessage(), [
@@ -190,53 +191,57 @@ class TileController extends Controller
         // Validate query parameters
         $validated = $request->validate([
             'search' => 'nullable|string|max:255',
-            'category' => 'nullable|string|exists:categories,name', // Assumes categories table has a 'name' column
-            'color' => 'nullable|string|exists:colors,name', // Assumes categories table has a 'name' column
+            'category' => 'nullable|string|exists:categories,name',
+            'color' => 'nullable|string|exists:colors,name',
         ]);
-
+    
         // Get query parameters
         $search = $validated['search'] ?? null;
         $category = $validated['category'] ?? null;
         $color = $validated['color'] ?? null;
-
+    
         // Build the query
-        $query = Tile::with('categories'); // Eager load categories relationship
-
-        // Apply search filter (partial match on name)
+        $query = Tile::with('categories');
+    
+        // Apply search filter (match names starting with search term)
         if ($search) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', $search . '%');
         }
-
-        // Apply category filter (assuming tiles belong to categories via relationship)
+    
+        // Apply category filter
         if ($category) {
             $query->whereHas('categories', function ($q) use ($category) {
-                $q->where('name', $category); // Match category name
+                $q->where('name', $category);
             });
         }
-
-        if($color){
+    
+        // Apply color filter
+        if ($color) {
             $query->whereHas('colors', function ($q) use ($color) {
-                $q->where('name', $color); // Match category name
+                $q->where('name', $color);
             });
         }
-
-        // Retrieve the first matching tile
-        $tile = $query->first();
-
-        // Handle case where no tile is found
-        if (!$tile) {
+    
+        // Retrieve all matching tiles
+        $tiles = $query->get();
+    
+        // Debugging: Log the query for inspection
+        \Log::info('Tile search query: ' . $query->toSql(), $query->getBindings());
+    
+        // Handle case where no tiles are found
+        if ($tiles->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tile not found',
-                'data' => null,
+                'message' => 'No tiles found',
+                'data' => [],
             ], 404);
         }
-
-        // Return the found tile
+    
+        // Return all found tiles
         return response()->json([
             'success' => true,
-            'message' => 'Tile retrieved successfully',
-            'data' => $tile,
+            'message' => 'Tiles retrieved successfully',
+            'data' => $tiles,
         ], 200);
     }
 }

@@ -24,7 +24,15 @@ class ColorController extends Controller
         // return 'zabeer';
         try {
             $colors = Color::paginate(10);
-            return $colors;
+            return response()->json([
+                'data' => $colors,
+                'current_page' => $colors->currentPage(),
+                'total_pages' => $colors->lastPage(),
+                'per_page' => $colors->perPage(),
+                'total' => $colors->total(),
+                'message' => 'color retrieved successfully',
+                'success' => true,
+            ]);
         } catch (\Exception $e) {
             Log::error('Error fetching categories: ' . $e->getMessage());
             return $this->responseError('Something went wrong, please try again later.');

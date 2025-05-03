@@ -5,24 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\DB;
 
 class CategoryController extends Controller
 {
-    
+
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
         $this->middleware('auth:api')->only(['store', 'update', 'destroy']);
     }
-    
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         try {
-            $categories = Category::paginate(10);
-    
+            $categories = DB::table('categories')
+                ->select('categories.*') 
+                ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles')
+                ->paginate(10);
+
+
             return response()->json([
                 'data' => $categories,
                 'current_page' => $categories->currentPage(),
@@ -37,7 +42,7 @@ class CategoryController extends Controller
             ], 500);
         }
     }
-    
+
 
 
     /**
@@ -62,7 +67,7 @@ class CategoryController extends Controller
 
         try {
             // Get the authenticated user (optional, if you need to associate the category with the user)
-      
+
 
             $category = Category::create($request->all());
 
@@ -118,7 +123,7 @@ class CategoryController extends Controller
     {
         try {
             $category->delete();
-    
+
             return response()->json([
                 'message' => 'Category deleted successfully'
             ], 200);
@@ -129,6 +134,6 @@ class CategoryController extends Controller
             ], 500);
         }
     }
-    
- 
+
+
 }
