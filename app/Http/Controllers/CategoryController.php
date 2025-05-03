@@ -41,6 +41,7 @@ class CategoryController extends Controller
             $categories = $query->paginate($paginate_count);
     
             return response()->json([
+                'success' => true,
                 'data' => $categories,
                 'current_page' => $categories->currentPage(),
                 'total_pages' => $categories->lastPage(),
@@ -84,6 +85,7 @@ class CategoryController extends Controller
             $category = Category::create($request->all());
 
             return response()->json([
+                'success' => true,
                 'message' => 'Category created successfully.',
                 'data' => $category,
             ], 201);

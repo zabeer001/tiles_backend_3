@@ -249,6 +249,7 @@ class TileController extends Controller
     
         // Return a success response
         return response()->json([
+            'success' => true,
             'message' => 'Category status updated successfully',
             'tile' => $tile
         ], 200);
