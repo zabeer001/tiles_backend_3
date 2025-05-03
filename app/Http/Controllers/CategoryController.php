@@ -13,7 +13,7 @@ class CategoryController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy','statusUpdate']);
     }
 
     /**
@@ -23,7 +23,7 @@ class CategoryController extends Controller
     {
         try {
             $categories = DB::table('categories')
-                ->select('categories.*') 
+                ->select('categories.*')
                 ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles')
                 ->paginate(10);
 
@@ -134,6 +134,29 @@ class CategoryController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    public function statusUpdate(Request $request, $id)
+    {
+        // dd($request);
+        // Validate the incoming status
+        $request->validate([
+            'status' => 'required|string' // Adjust allowed values as needed
+        ]);
+    
+        // Find the category by ID
+        $category = Category::findOrFail($id);
+    
+        // Update the status
+        $category->status = $request->input('status');
+        $category->save();
+    
+        // Return a success response
+        return response()->json([
+            'message' => 'Category status updated successfully',
+            'category' => $category
+        ], 200);
     }
 
 

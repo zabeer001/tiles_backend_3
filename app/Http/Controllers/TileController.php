@@ -163,25 +163,37 @@ class TileController extends Controller
             'status' => 'nullable|string|max:255',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
+            'color_id' => 'nullable|array', // Added color_id validation
+            'color_id.*' => 'exists:colors,id', // Ensure color_id exists in colors table
         ]);
-
+    
         try {
             // Handle image update using helper
             $imagePath = HelperMethods::updateImage($request, $tile);
-
-            // Update tile
-            $tile->update([
+    
+            // Prepare update data
+            $updateData = [
                 'name' => $validated['name'],
                 'grid_category' => $validated['grid_category'],
                 'description' => $validated['description'],
-                'status' => $validated['status'],
                 'image' => $imagePath,
-            ]);
-
+            ];
+    
+            // Only add status if it's present in the request
+            if ($request->filled('status')) {
+                $updateData['status'] = $validated['status'];
+            }
+    
+            // Update tile
+            $tile->update($updateData);
+    
             // Sync categories
             $tile->categories()->sync($validated['category_id']);
-
-            return $this->responseSuccess($tile->load('categories'), 'Tile updated successfully');
+    
+            // Sync colors (use empty array if color_id is not provided)
+            $tile->colors()->sync($validated['color_id'] ?? []);
+    
+            return $this->responseSuccess($tile->load(['categories', 'colors']), 'Tile updated successfully');
         } catch (\Exception $e) {
             Log::error('Error updating tile: ' . $e->getMessage(), [
                 'tile_id' => $tile->id,
@@ -191,6 +203,7 @@ class TileController extends Controller
             return $this->responseError('Failed to update tile', $e->getMessage(), 500);
         }
     }
+    
 
     /**
      * Remove the specified tile from storage.
@@ -218,6 +231,27 @@ class TileController extends Controller
             ]);
             return $this->responseError('Failed to delete tile', $e->getMessage(), 500);
         }
+    }
+    public function statusUpdate(Request $request, $id)
+    {
+        // dd($request);
+        // Validate the incoming status
+        $request->validate([
+            'status' => 'required|string' // Adjust allowed values as needed
+        ]);
+    
+        // Find the category by ID
+        $tile = Tile::findOrFail($id);
+    
+        // Update the status
+        $tile->status = $request->input('status');
+        $tile->save();
+    
+        // Return a success response
+        return response()->json([
+            'message' => 'Category status updated successfully',
+            'tile' => $tile
+        ], 200);
     }
 
    

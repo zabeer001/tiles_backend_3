@@ -170,4 +170,25 @@ class ColorController extends Controller
             return $this->responseError('Failed to delete color', $e->getMessage(), 500);
         }
     }
+    public function statusUpdate(Request $request, $id)
+    {
+        // dd($request);
+        // Validate the incoming status
+        $request->validate([
+            'status' => 'required|string' // Adjust allowed values as needed
+        ]);
+    
+        // Find the category by ID
+        $color = Color::findOrFail($id);
+    
+        // Update the status
+        $color->status = $request->input('status');
+        $color->save();
+    
+        // Return a success response
+        return response()->json([
+            'message' => 'Category status updated successfully',
+            'color' => $color
+        ], 200);
+    }
 }
