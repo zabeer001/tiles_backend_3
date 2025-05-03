@@ -12,6 +12,7 @@ class Color extends Model
         'name',
         'code',
         'image',
+        'status',
     ];
 
     public function tiles()

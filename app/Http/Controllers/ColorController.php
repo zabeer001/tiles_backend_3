@@ -49,18 +49,16 @@ class ColorController extends Controller
      */
     public function store(Request $request)
     {
-    
+
         // return 'zabeer';
         // Validate the incoming request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:255', // Code is optional
-      'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
-
-
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
         // return $request;
-       
+
 
         try {
             // Handle image upload using the helper function
@@ -71,11 +69,10 @@ class ColorController extends Controller
             $color->name = $validated['name'];
             $color->code = $request->code;
             $color->image = $imagePath;
-
             $color->save();
 
             // Sync categories to the color (add or remove as necessary)
-        
+
 
             // Return success response using colorsResource
             return $this->responseSuccess($color, 'color created successfully', 201);
@@ -102,38 +99,35 @@ class ColorController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
- 
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
     {
-        // return 'ok';
         // Validate the incoming request
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:255', // Code is optional
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image is optional
+            'status' => 'nullable|string|max:255',
         ]);
 
-       
+
 
         try {
             // Find the existing color by ID
             $color = Color::findOrFail($id);
-
-            // Update the image if a new one is uploaded
- 
-
             // Update the color's fields
             $color->name = $validated['name'];
             $color->code = $validated['code'];
+            $color->status = $validated['status'];
             $color->image = HelperMethods::updateImage($request, $color);  // Use the existing updateImage method
             $color->save();
 
-         
-         
+
+
 
             // Return success response using colorsResource
             return $this->responseSuccess($color, 'Tile updated successfully', 201);
@@ -158,11 +152,11 @@ class ColorController extends Controller
             if ($color->image && file_exists(public_path($color->image))) {
                 unlink(public_path($color->image));
             }
-    
+
             // Delete the color from the database
             $color->delete();
             Log::info('Color deleted', ['color_id' => $color->id]);
-    
+
             // Return success response
             return $this->responseSuccess(null, 'Color deleted successfully', 200);
         } catch (\Exception $e) {
@@ -171,7 +165,7 @@ class ColorController extends Controller
                 'color_id' => $color->id,
                 'error' => $e->getTraceAsString(),
             ]);
-    
+
             // Return error response
             return $this->responseError('Failed to delete color', $e->getMessage(), 500);
         }

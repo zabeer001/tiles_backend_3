@@ -13,6 +13,7 @@ class Tile extends Model
         'grid_category',
         'description',
         'image',
+        'status',
     ];
 
     public function categories()

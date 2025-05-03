@@ -128,6 +128,7 @@ class TileController extends Controller
             'grid_category' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'status' => 'nullable|string|max:255',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
         ]);
@@ -141,6 +142,7 @@ class TileController extends Controller
                 'name' => $validated['name'],
                 'grid_category' => $validated['grid_category'],
                 'description' => $validated['description'],
+                'status' => $validated['status'],
                 'image' => $imagePath,
             ]);
 
@@ -199,6 +201,7 @@ class TileController extends Controller
         $search = $validated['search'] ?? null;
         $category = $validated['category'] ?? null;
         $color = $validated['color'] ?? null;
+        
     
         // Build the query
         $query = Tile::with('categories');

@@ -108,6 +108,7 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'status' => 'nullable|string|max:255',
         ]);
 
         $category->update($request->all());
