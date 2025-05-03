@@ -15,34 +15,66 @@ class TileController extends Controller
         $this->middleware('auth:api')->only(['store', 'update', 'destroy']);
     }
 
-
-    /**
-     * Display a listing of the tiles.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        try {
-            // Retrieve all tiles with their categories
-            $tiles = Tile::with('categories')->paginate(10);
+        // Validate query parameters
+        $validated = $request->validate([
+            'paginate_count' => 'nullable|integer|min:1',
+            'search' => 'nullable|string|max:255',
+            'category' => 'nullable|string|exists:categories,name',
+            'color' => 'nullable|string|exists:colors,name',
+        ]);
 
-            return response()->json([
-                'data' => $tiles,
-                'current_page' => $tiles->currentPage(),
-                'total_pages' => $tiles->lastPage(),
-                'per_page' => $tiles->perPage(),
-                'total' => $tiles->total(),
-                'message' => 'Tiles retrieved successfully',
-                'success' => true,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error retrieving tiles: ' . $e->getMessage(), [
-                'error' => $e->getTraceAsString(),
-            ]);
-            return response()->json([
-                'message' => 'Failed to retrieve tiles',
-                'error' => $e->getMessage(),
-            ], 500);
+        // Get query parameters
+        $paginate_count = $validated['paginate_count'] ?? 10;
+        $search = $validated['search'] ?? null;
+        $category = $validated['category'] ?? null;
+        $color = $validated['color'] ?? null;
+
+
+        // Build the query
+        $query = Tile::with(['categories', 'colors']);
+
+        // Apply search filter (match names starting with search term)
+        if ($search) {
+            $query->where('name', 'like', $search . '%');
         }
+
+        // Apply category filter
+        if ($category) {
+            $query->whereHas('categories', function ($q) use ($category) {
+                $q->where('name', $category);
+            });
+        }
+
+        // Apply color filter
+        if ($color) {
+            $query->whereHas('colors', function ($q) use ($color) {
+                $q->where('name', $color);
+            });
+        }
+
+        // Retrieve all matching tiles
+        $tiles = $query->paginate($paginate_count);
+
+        // Debugging: Log the query for inspection
+        \Log::info('Tile search query: ' . $query->toSql(), $query->getBindings());
+
+        // Handle case where no tiles are found
+        if ($tiles->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tiles found',
+                'data' => [],
+            ], 404);
+        }
+
+        // Return all found tiles
+        return response()->json([
+            'success' => true,
+            'message' => 'Tiles retrieved successfully',
+            'data' => $tiles,
+        ], 200);
     }
 
 
@@ -63,14 +95,14 @@ class TileController extends Controller
             'color_id' => 'nullable|array',
             'color_id.*' => 'exists:colors,id',
         ]);
-    
+
         try {
             // Handle image upload if present
             $imagePath = null;
             if ($request->hasFile('image')) {
                 $imagePath = HelperMethods::uploadImage($request->file('image'));
             }
-    
+
             // Create a new tile
             $tile = Tile::create([
                 'name' => $validated['name'],
@@ -78,11 +110,11 @@ class TileController extends Controller
                 'description' => $validated['description'],
                 'image' => $imagePath,
             ]);
-    
+
             // Sync relationships
             $tile->categories()->sync($validated['category_id']);
             $tile->colors()->sync($validated['color_id'] ?? []);
-    
+
             return $this->responseSuccess(
                 $tile->load(['categories', 'colors']),
                 'Tile created successfully',
@@ -93,7 +125,7 @@ class TileController extends Controller
                 'request_data' => $request->all(),
                 'error' => $e->getTraceAsString(),
             ]);
-    
+
             return $this->responseError('Something went wrong', $e->getMessage(), 500);
         }
     }
@@ -188,63 +220,5 @@ class TileController extends Controller
         }
     }
 
-    public function search(Request $request)
-    {
-        // Validate query parameters
-        $validated = $request->validate([
-            'search' => 'nullable|string|max:255',
-            'category' => 'nullable|string|exists:categories,name',
-            'color' => 'nullable|string|exists:colors,name',
-        ]);
-    
-        // Get query parameters
-        $search = $validated['search'] ?? null;
-        $category = $validated['category'] ?? null;
-        $color = $validated['color'] ?? null;
-        
-    
-        // Build the query
-        $query = Tile::with('categories');
-    
-        // Apply search filter (match names starting with search term)
-        if ($search) {
-            $query->where('name', 'like', $search . '%');
-        }
-    
-        // Apply category filter
-        if ($category) {
-            $query->whereHas('categories', function ($q) use ($category) {
-                $q->where('name', $category);
-            });
-        }
-    
-        // Apply color filter
-        if ($color) {
-            $query->whereHas('colors', function ($q) use ($color) {
-                $q->where('name', $color);
-            });
-        }
-    
-        // Retrieve all matching tiles
-        $tiles = $query->get();
-    
-        // Debugging: Log the query for inspection
-        \Log::info('Tile search query: ' . $query->toSql(), $query->getBindings());
-    
-        // Handle case where no tiles are found
-        if ($tiles->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No tiles found',
-                'data' => [],
-            ], 404);
-        }
-    
-        // Return all found tiles
-        return response()->json([
-            'success' => true,
-            'message' => 'Tiles retrieved successfully',
-            'data' => $tiles,
-        ], 200);
-    }
+   
 }
