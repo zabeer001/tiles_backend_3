@@ -25,21 +25,21 @@ class CategoryController extends Controller
             'paginate_count' => 'nullable|integer|min:1',
             'search' => 'nullable|string|max:255',
         ]);
-    
+
         $search = $validated['search'] ?? null;
         $paginate_count = $validated['paginate_count'] ?? 10;
-    
+
         try {
             $query = DB::table('categories')
                 ->select('categories.*')
                 ->selectRaw('(SELECT COUNT(*) FROM category_tiles WHERE category_tiles.category_id = categories.id) as tiles_count');
-    
+
             if ($search) {
                 $query->where('name', 'like', $search . '%');
             }
-    
+
             $categories = $query->paginate($paginate_count);
-    
+
             return response()->json([
                 'success' => true,
                 'data' => $categories,
@@ -153,28 +153,70 @@ class CategoryController extends Controller
     }
 
 
+    // public function statusUpdate(Request $request, $id)
+    // {
+    //     // dd($request);
+    //     // Validate the incoming status
+    //     $request->validate([
+    //         'status' => 'required|string' // Adjust allowed values as needed
+    //     ]);
+
+    //     // Find the category by ID
+    //     $category = Category::findOrFail($id);
+
+    //     // Update the status
+    //     $category->status = $request->input('status');
+    //     $category->save();
+
+    //     // Return a success response
+    //     return response()->json([
+    //         'success'=>true,
+    //         'message' => 'Category status updated successfully',
+    //         'category' => $category
+    //     ], 200);
+    // }
+
     public function statusUpdate(Request $request, $id)
     {
-        // dd($request);
-        // Validate the incoming status
-        $request->validate([
-            'status' => 'required|string' // Adjust allowed values as needed
-        ]);
+        try {
+            // Validate the incoming status
+            $request->validate([
+                'status' => 'required|string' // You can restrict values further if needed
+            ]);
 
-        // Find the category by ID
-        $category = Category::findOrFail($id);
+            // Find the category by ID
+            $category = Category::findOrFail($id);
 
-        // Update the status
-        $category->status = $request->input('status');
-        $category->save();
+            // Update the status
+            $category->status = $request->input('status');
+            $category->save();
 
-        // Return a success response
-        return response()->json([
-            'success'=>true,
-            'message' => 'Category status updated successfully',
-            'category' => $category
-        ], 200);
+            // Return a success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Category status updated successfully',
+                'category' => $category
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation error response
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Return model not found error
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found'
+            ], 404);
+        } catch (\Exception $e) {
+            // Return general error response
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating category status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-
-
 }
