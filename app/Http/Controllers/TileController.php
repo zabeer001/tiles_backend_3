@@ -227,7 +227,21 @@ class TileController extends Controller
 
             if ($tile->svg_path && file_exists(public_path('uploads/' . $tile->image))) {
                 $svgContent = file_get_contents(public_path('uploads/' . $tile->image));
-                $tile->svg_inline = $this->extractSvgPath($svgContent);
+
+                $svg = simplexml_load_string($svgContent);
+                $svg->registerXPathNamespace('svg', 'http://www.w3.org/2000/svg');
+
+                $paths = $svg->xpath('//svg:path');
+
+                $dValues = [];
+                foreach ($paths as $path) {
+                    $dValues[] = (string)$path['d'];
+                }
+
+              
+
+
+                $tile->svg_inline = $dValues;
             } else {
                 $tile->svg_inline = null;
             }
@@ -252,23 +266,23 @@ class TileController extends Controller
     }
 
 
-    public function extractSvgPath($filename)
-    {
-        $path = storage_path("public/uploads/{$filename}");
-        $svgContent = file_get_contents($path);
+    // public function extractSvgPath($filename)
+    // {
+    //     $path = storage_path("public/uploads/{$filename}");
+    //     $svgContent = file_get_contents($path);
 
-        $svg = simplexml_load_string($svgContent);
-        $svg->registerXPathNamespace('svg', 'http://www.w3.org/2000/svg');
+    //     $svg = simplexml_load_string($svgContent);
+    //     $svg->registerXPathNamespace('svg', 'http://www.w3.org/2000/svg');
 
-        $paths = $svg->xpath('//svg:path');
+    //     $paths = $svg->xpath('//svg:path');
 
-        $dValues = [];
-        foreach ($paths as $path) {
-            $dValues[] = (string)$path['d'];
-        }
+    //     $dValues = [];
+    //     foreach ($paths as $path) {
+    //         $dValues[] = (string)$path['d'];
+    //     }
 
-        return response()->json(['paths' => $dValues]);
-    }
+    //     return response()->json(['paths' => $dValues]);
+    // }
 
 
 
