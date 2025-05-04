@@ -221,28 +221,36 @@ class TileController extends Controller
     // }
 
     public function show(Tile $tile)
-    {
-        try {
-            // Load categories relationship
-            $tile->load('categories');
+{
+    try {
+        $tile->load('categories');
 
-            // Check if the tile has an SVG file path (assuming column name is `svg_path`)
-            if ($tile->svg_path && file_exists(public_path('uploads/' . $tile->svg_path))) {
-                $svgContent = file_get_contents(public_path('uploads/' . $tile->svg_path));
-                $tile->svg_inline = $svgContent; // Add inline SVG content
-            } else {
-                $tile->svg_inline = null;
-            }
-
-            return $this->responseSuccess($tile, 'Tile retrieved successfully');
-        } catch (\Exception $e) {
-            Log::error('Error retrieving tile: ' . $e->getMessage(), [
-                'tile_id' => $tile->id,
-                'error' => $e->getTraceAsString(),
-            ]);
-            return $this->responseError('Failed to retrieve tile', $e->getMessage(), 500);
+        if ($tile->svg_path && file_exists(public_path('uploads/' . $tile->image))) {
+            $svgContent = file_get_contents(public_path('uploads/' . $tile->image));
+            $tile->svg_inline = $svgContent;
+        } else {
+            $tile->svg_inline = null;
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tile retrieved successfully',
+            'data' => $tile,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error retrieving tile: ' . $e->getMessage(), [
+            'tile_id' => $tile->id ?? null,
+            'error' => $e->getTraceAsString(),
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to retrieve tile',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
 
     /**
