@@ -204,21 +204,53 @@ class TileController extends Controller
     /**
      * Display the specified tile.
      */
+    // public function show(Tile $tile)
+    // {
+    //     try {
+    //         // Load categories relationship
+    //         $tile->load('categories');
+
+    //         return $this->responseSuccess($tile, 'Tile retrieved successfully');
+    //     } catch (\Exception $e) {
+    //         Log::error('Error retrieving tile: ' . $e->getMessage(), [
+    //             'tile_id' => $tile->id,
+    //             'error' => $e->getTraceAsString(),
+    //         ]);
+    //         return $this->responseError('Failed to retrieve tile', $e->getMessage(), 500);
+    //     }
+    // }
+
     public function show(Tile $tile)
     {
         try {
-            // Load categories relationship
+            // Load related categories
             $tile->load('categories');
 
-            return $this->responseSuccess($tile, 'Tile retrieved successfully');
+            // Path to the uploaded SVG file
+            $svgFilePath = public_path('uploads/' . $tile->image_path); // Assuming image_path is something.svg
+
+            // Check if file exists and is an SVG
+            if (!file_exists($svgFilePath) || pathinfo($svgFilePath, PATHINFO_EXTENSION) !== 'svg') {
+                return $this->responseError('SVG file not found for this tile.', null, 404);
+            }
+
+            // Read the raw SVG content
+            $svgContent = file_get_contents($svgFilePath);
+
+            // Attach SVG content to tile response
+            $tile->svg_image = $svgContent;
+
+            return $this->responseSuccess($tile, 'Tile retrieved successfully with SVG content');
         } catch (\Exception $e) {
             Log::error('Error retrieving tile: ' . $e->getMessage(), [
-                'tile_id' => $tile->id,
+                'tile_id' => $tile->id ?? null,
                 'error' => $e->getTraceAsString(),
             ]);
+
             return $this->responseError('Failed to retrieve tile', $e->getMessage(), 500);
         }
     }
+
 
     /**
      * Update the specified tile in storage.
