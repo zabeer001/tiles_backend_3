@@ -221,35 +221,54 @@ class TileController extends Controller
     // }
 
     public function show(Tile $tile)
-{
-    try {
-        $tile->load('categories');
+    {
+        try {
+            $tile->load('categories');
 
-        if ($tile->svg_path && file_exists(public_path('uploads/' . $tile->image))) {
-            $svgContent = file_get_contents(public_path('uploads/' . $tile->image));
-            $tile->svg_inline = $svgContent;
-        } else {
-            $tile->svg_inline = null;
+            if ($tile->svg_path && file_exists(public_path('uploads/' . $tile->image))) {
+                $svgContent = file_get_contents(public_path('uploads/' . $tile->image));
+                $tile->svg_inline = $this->extractSvgPath($svgContent);
+            } else {
+                $tile->svg_inline = null;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tile retrieved successfully',
+                'data' => $tile,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error retrieving tile: ' . $e->getMessage(), [
+                'tile_id' => $tile->id ?? null,
+                'error' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve tile',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function extractSvgPath($filename)
+    {
+        $path = storage_path("public/uploads/{$filename}");
+        $svgContent = file_get_contents($path);
+
+        $svg = simplexml_load_string($svgContent);
+        $svg->registerXPathNamespace('svg', 'http://www.w3.org/2000/svg');
+
+        $paths = $svg->xpath('//svg:path');
+
+        $dValues = [];
+        foreach ($paths as $path) {
+            $dValues[] = (string)$path['d'];
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Tile retrieved successfully',
-            'data' => $tile,
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Error retrieving tile: ' . $e->getMessage(), [
-            'tile_id' => $tile->id ?? null,
-            'error' => $e->getTraceAsString(),
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to retrieve tile',
-            'error' => $e->getMessage(),
-        ], 500);
+        return response()->json(['paths' => $dValues]);
     }
-}
 
 
 
