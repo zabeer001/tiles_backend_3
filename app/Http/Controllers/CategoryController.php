@@ -140,10 +140,12 @@ class CategoryController extends Controller
             $category->delete();
 
             return response()->json([
+                'success' => true,
                 'message' => 'Category deleted successfully'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'message' => 'Failed to delete category',
                 'error' => $e->getMessage()
             ], 500);
@@ -168,6 +170,7 @@ class CategoryController extends Controller
 
         // Return a success response
         return response()->json([
+            'success'=>true,
             'message' => 'Category status updated successfully',
             'category' => $category
         ], 200);
