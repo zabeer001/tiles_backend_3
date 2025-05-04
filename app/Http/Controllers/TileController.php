@@ -227,8 +227,8 @@ class TileController extends Controller
             $tile->load('categories');
 
             // Check if the tile has an SVG file path (assuming column name is `svg_path`)
-            if ($tile->svg_path && file_exists(public_path('uploads/svgs/' . $tile->svg_path))) {
-                $svgContent = file_get_contents(public_path('uploads/svgs/' . $tile->svg_path));
+            if ($tile->svg_path && file_exists(public_path('uploads/' . $tile->svg_path))) {
+                $svgContent = file_get_contents(public_path('uploads/' . $tile->svg_path));
                 $tile->svg_inline = $svgContent; // Add inline SVG content
             } else {
                 $tile->svg_inline = null;
