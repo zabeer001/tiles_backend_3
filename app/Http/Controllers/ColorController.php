@@ -207,4 +207,7 @@ class ColorController extends Controller
             'color' => $color
         ], 200);
     }
+    // arr = [1,5,7]
+    //for(i=1;i<arr.len(arr);i++){
+    //  api delete }
 }
