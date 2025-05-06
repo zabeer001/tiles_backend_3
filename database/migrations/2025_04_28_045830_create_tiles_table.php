@@ -17,7 +17,7 @@ return new class extends Migration
             // $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->text('description')->nullable();
             $table->string('grid_category');
-            $table->string('image')->nullable();
+            $table->longText('image')->nullable();
             $table->string('status')->default('default');
             $table->timestamps();
         });
