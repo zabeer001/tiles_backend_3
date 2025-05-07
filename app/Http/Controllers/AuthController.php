@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -128,4 +129,21 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+     // Send password reset link to email
+     public function sendResetEmailLink(Request $request)
+     {
+         $request->validate(['email' => 'required|email']);
+ 
+         $status = Password::sendResetLink(
+             $request->only('email')
+         );
+ 
+         return $status === Password::RESET_LINK_SENT
+             ? response()->json(['success' => true, 'message' => __($status)])
+             : response()->json(['success' => false, 'message' => __($status)], 400);
+     }
+
+
+
 }
