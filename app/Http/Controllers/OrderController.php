@@ -11,14 +11,58 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
+        // Validate query parameters
         $validated = $request->validate([
             'paginate_count' => 'nullable|integer|min:1',
+            'query' => 'nullable|string|max:255',
         ]);
+
+        // Get query parameters
         $paginate_count = $validated['paginate_count'] ?? 10;
+        $query = $validated['query'] ?? null;
 
-        return response()->json(Order::paginate($paginate_count));
+        try {
+            // Build the query
+            $orderQuery = Order::query();
+
+            // Apply search filter
+            if ($query) {
+                $orderQuery->where(function ($q) use ($query) {
+                    $q->where('phone_number', 'like', $query . '%')
+                        ->orWhere('email', 'like', $query . '%');
+                });
+            }
+
+            // Paginate the result
+            $orders = $orderQuery->paginate($paginate_count);
+
+            // Check if any data was returned
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No orders found',
+                    'data' => [],
+                ], 404);
+            }
+
+            // Return with pagination meta
+            return response()->json([
+                'success' => true,
+                'message' => 'Orders retrieved successfully',
+                'data' => $orders,
+                'current_page' => $orders->currentPage(),
+                'total_pages' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch orders.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-
     public function store(StoreOrderRequest $request)
     {
         try {
