@@ -168,7 +168,7 @@ class TileController extends Controller
             'grid_category' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10 MB = 10240 KB
-            'image_svg_text' => 'nullable|string|max:5120',
+            'image_svg_text' => 'nullable',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
             'color_id' => 'nullable|array',
