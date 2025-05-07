@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('grid_category');
             $table->string('image')->nullable();
-            $table->longText('image_svg_text')->nullable();
+            $table->longText('image_svg_textas')->nullable();
             $table->string('status')->default('default');
             $table->timestamps();
         });
