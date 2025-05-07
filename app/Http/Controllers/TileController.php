@@ -12,7 +12,7 @@ class TileController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy','statusUpdate']);
     }
 
     // public function index(Request $request)
@@ -85,6 +85,7 @@ class TileController extends Controller
             'search' => 'nullable|string|max:255',
             'category' => 'nullable|string|exists:categories,name',
             'color' => 'nullable|string|exists:colors,name',
+            'status' => 'nullable|string|max:255',
         ]);
 
         // Get query parameters
@@ -92,6 +93,7 @@ class TileController extends Controller
         $search = $validated['search'] ?? null;
         $category = $validated['category'] ?? null;
         $color = $validated['color'] ?? null;
+        $status = $validated['status'] ?? null;
 
         try {
             // Build the query
@@ -116,6 +118,11 @@ class TileController extends Controller
                 });
             }
 
+            if ($status) {
+                $query->where('status', 'like', $status . '%');
+            }
+
+          
             // Paginate the result
             $tiles = $query->paginate($paginate_count);
 

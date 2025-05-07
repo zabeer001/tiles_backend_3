@@ -9,17 +9,27 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+
+    public function __construct()
+    {
+        // Apply JWT authentication middleware only to store, update, and destroy methods
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy','statusUpdate']);
+    }
+
+
     public function index(Request $request)
     {
         // Validate query parameters
         $validated = $request->validate([
             'paginate_count' => 'nullable|integer|min:1',
             'query' => 'nullable|string|max:255',
+            'status' => 'nullable|string|max:255',
         ]);
 
         // Get query parameters
         $paginate_count = $validated['paginate_count'] ?? 10;
         $query = $validated['query'] ?? null;
+        $status = $validated['status'] ?? null;
 
         try {
             // Build the query
@@ -31,6 +41,11 @@ class OrderController extends Controller
                     $q->where('phone_number', 'like', $query . '%')
                         ->orWhere('email', 'like', $query . '%');
                 });
+            }
+
+
+            if ($status) {
+                $orderQuery->where('status', 'like', $status . '%');
             }
 
             // Paginate the result
