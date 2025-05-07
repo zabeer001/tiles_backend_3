@@ -22,7 +22,8 @@ class UpdateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_image' => 'sometimes|string',
+            'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image_svg_text' => 'nullable|string|max:5120',
             'name' => 'sometimes|string',
             'email' => 'sometimes|email',
             'phone_number' => 'sometimes|string',

@@ -160,7 +160,8 @@ class TileController extends Controller
             'name' => 'required|string|max:255',
             'grid_category' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'string|nullable|max:5120',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10 MB = 10240 KB
+            'image_svg_text' => 'nullable|string|max:5120',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
             'color_id' => 'nullable|array',
@@ -179,6 +180,7 @@ class TileController extends Controller
                 'name' => $validated['name'],
                 'grid_category' => $validated['grid_category'],
                 'description' => $validated['description'],
+                'image_svg_text' => $validated['image_svg_text'],
                 'image' => $imagePath,
             ]);
 
@@ -296,7 +298,8 @@ class TileController extends Controller
             'name' => 'required|string|max:255',
             'grid_category' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10 MB = 10240 KB
+            'image_svg_text' => 'nullable|string|max:5120',
             'status' => 'nullable|string|max:255',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
@@ -313,6 +316,7 @@ class TileController extends Controller
                 'name' => $validated['name'],
                 'grid_category' => $validated['grid_category'],
                 'description' => $validated['description'],
+                'image_svg_text' => $validated['image_svg_text'],
                 'image' => $imagePath,
             ];
 

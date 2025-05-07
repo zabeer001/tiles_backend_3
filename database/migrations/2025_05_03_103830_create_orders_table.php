@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('product_image'); // From "2. Name" section
+            // $table->string('product_image')->nullable(); // From "2. Name" section
+            $table->longText('image_svg_text')->nullable(); // From "2. Name" section
             $table->string('name'); // From "2. Name" section
             $table->string('email'); // From email field
             $table->string('phone_number'); // From Phone no field

@@ -14,6 +14,7 @@ class Tile extends Model
         'description',
         'image',
         'status',
+        'image_svg_text',
     ];
 
     public function categories()
