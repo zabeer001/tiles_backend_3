@@ -80,6 +80,7 @@ class OrderController extends Controller
     }
     public function store(StoreOrderRequest $request)
     {
+        dd($request);
         try {
             $order = Order::create($request->validated());
 

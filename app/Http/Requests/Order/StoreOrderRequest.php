@@ -20,7 +20,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-            'image_svg_text' => 'nullable|string|max:5120',
+            'image_svg_text' => 'nullable|string',
             'name' => 'required|string',
             'email' => 'required|email',
             'phone_number' => 'required|string',
