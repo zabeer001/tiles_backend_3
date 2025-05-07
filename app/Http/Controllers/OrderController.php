@@ -135,4 +135,27 @@ class OrderController extends Controller
         }
     }
 
+    public function statusUpdate(Request $request, $id)
+    {
+        // dd($request);
+        // Validate the incoming status
+        $request->validate([
+            'status' => 'required|string' // Adjust allowed values as needed
+        ]);
+
+        // Find the category by ID
+        $order = Order::findOrFail($id);
+
+        // Update the status
+        $order->status = $request->input('status');
+        $order->save();
+
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Category status updated successfully',
+            'tile' => $order
+        ], 200);
+    }
+
 }
