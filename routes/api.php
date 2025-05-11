@@ -42,3 +42,5 @@ Route::put('tiles/status/{id}', [TileController::class, 'statusUpdate']);
 //orders
 Route::apiResource('orders', OrderController::class);
 Route::put('orders/status/{id}', [TileController::class, 'statusUpdate']);
+
+Route::post('tile-select/{id}', [TileController::class, 'tileSelect']);

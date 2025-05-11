@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tile;
 use Illuminate\Http\Request;
 use App\Helpers\HelperMethods;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TileController extends Controller
@@ -12,7 +13,7 @@ class TileController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy','statusUpdate']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy', 'statusUpdate']);
     }
 
     // public function index(Request $request)
@@ -77,6 +78,46 @@ class TileController extends Controller
     //     ], 200);
     // }
 
+    public function tileSelect(Request $request, $id)
+    {
+        $data = DB::select("
+        SELECT 
+            c.id AS category_id,
+            c.name AS category_name,
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'tile_id', t.id,
+                    'name', t.name,
+                    'description', t.description,
+                    'grid_category', t.grid_category,
+                    'image', t.image,
+                    'image_svg_text', t.image_svg_text,
+                    'status', t.status
+                )
+            ) AS tiles
+        FROM categories c
+        JOIN category_tiles ct ON c.id = ct.category_id
+        JOIN tiles t ON t.id = ct.tile_id
+        WHERE c.id = ?
+        GROUP BY c.id, c.name
+    ", [$id]);
+
+        if (empty($data)) {
+            return response()->json(['message' => 'No tiles found for this category'], 404);
+        }
+
+        $formatted = collect($data)->map(function ($item) {
+            return [
+                'category_id' => $item->category_id,
+                'category_name' => $item->category_name,
+                'tiles' => json_decode($item->tiles, true),
+            ];
+        });
+
+        return response()->json($formatted->first()); // Return single category
+    }
+
+
     public function index(Request $request)
     {
         // Validate query parameters
@@ -122,7 +163,7 @@ class TileController extends Controller
                 $query->where('status', 'like', $status . '%');
             }
 
-          
+
             // Paginate the result
             $tiles = $query->paginate($paginate_count);
 
@@ -247,7 +288,7 @@ class TileController extends Controller
                     $dValues[] = (string)$path['d'];
                 }
 
-              
+
 
 
                 $tile->svg_inline = $dValues;
