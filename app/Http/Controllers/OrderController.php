@@ -15,7 +15,7 @@ class OrderController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy', 'statusUpdate']);
+        $this->middleware('auth:api')->only(['update', 'destroy', 'statusUpdate']);
     }
 
 
