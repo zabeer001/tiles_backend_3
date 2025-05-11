@@ -149,7 +149,7 @@ class OrderController extends Controller
                 'referred_by' => 'nullable|string',
                 'other_specify' => 'nullable|string',
                 'rotations' => 'nullable|array',
-                'svg_base64' => 'nullable|string',
+                'svg_base64' => 'nullable',
             ]);
 
             $order = Order::create([
