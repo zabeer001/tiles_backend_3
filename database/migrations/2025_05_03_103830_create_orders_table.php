@@ -13,17 +13,21 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            // $table->string('product_image')->nullable(); // From "2. Name" section
-            $table->longText('image_svg_text')->nullable(); // From "2. Name" section
             $table->string('name'); // From "2. Name" section
             $table->string('email'); // From email field
-            $table->string('phone_number'); // From Phone no field
-            $table->integer('quantity')->nullable(); // From Quantity r (possibly "required"?)
-            $table->string('quantity_per_unit')->nullable(); // From Quantity per unit
-            $table->string('status')->default('pending'); // From Status section
-            $table->string('refer_by')->default('refer_by'); // From Status section
-            $table->text('notes')->nullable(); // For "Create to message" and "Message" sections
+            $table->string('phone_number'); // From Phone no 
             $table->text('message')->nullable();
+            $table->string('tile_name');
+            $table->string('quantity_unit')->default('Units'); // From Quantity per unit
+            $table->integer('quantity_needed');
+            $table->string('status')->default('pending'); // From Status section
+            $table->string('referred_by')->nullable();
+            $table->string('other_specify')->nullable();
+            $table->string('grout_color')->nullable();
+            $table->string('grout_thickness')->nullable();
+            $table->string('grid_category')->nullable();
+            $table->json('rotations')->nullable();
+            $table->longText('svg_base64')->nullable();
             $table->timestamps();
         });
     }

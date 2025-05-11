@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Order\StoreOrderRequest;
@@ -14,7 +15,7 @@ class OrderController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy','statusUpdate']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy', 'statusUpdate']);
     }
 
 
@@ -79,30 +80,58 @@ class OrderController extends Controller
             ], 500);
         }
     }
-    public function store(StoreOrderRequest $request)
+    // public function store(StoreOrderRequest $request)
+    // {
+    //     // dd($request);
+    //     try {
+    //         $order = Order::create($request->validated());
+
+    //         return $this->responseSuccess(
+    //             $order, // You can use $order->load([...]) if you want related models
+    //             'Order created successfully',
+    //             201
+    //         );
+    //     } catch (\Exception $e) {
+    //         Log::error('Error creating order: ' . $e->getMessage(), [
+    //             'request_data' => $request->all(),
+    //             'error' => $e->getTraceAsString(),
+    //         ]);
+
+    //         return $this->responseError(
+    //             'Something went wrong while creating the order',
+    //             $e->getMessage(),
+    //             500
+    //         );
+    //     }
+    // }
+
+    public function store(Request $request)
     {
-        // dd($request);
-        try {
-            $order = Order::create($request->validated());
+        $validated = $request->validate([
+            'name' => 'required',
+            'email' => 'required|email',
+            'phone_number' => 'required',
+            'message' => 'nullable',
+            'tile_name' => 'required',
+            'grout_color' => 'nullable',
+            'grout_thickness' => 'nullable',
+            'grid_category' => 'nullable',
+            'quantity_needed' => 'required|integer',
+            'quantity_unit' => 'nullable|string',
+            'referred_by' => 'nullable|string',
+            'other_specify' => 'nullable|string',
+            'rotations' => 'nullable|array',
+            'svg_base64' => 'nullable|string',
+        ]);
 
-            return $this->responseSuccess(
-                $order, // You can use $order->load([...]) if you want related models
-                'Order created successfully',
-                201
-            );
-        } catch (\Exception $e) {
-            Log::error('Error creating order: ' . $e->getMessage(), [
-                'request_data' => $request->all(),
-                'error' => $e->getTraceAsString(),
-            ]);
+        $order = Order::create([
+            ...$validated,
+            'rotations' => json_encode($validated['rotations'] ?? []),
+        ]);
 
-            return $this->responseError(
-                'Something went wrong while creating the order',
-                $e->getMessage(),
-                500
-            );
-        }
+        return response()->json(['message' => 'Order placed successfully', 'order' => $order], 201);
     }
+
 
 
     public function show(Order $order)
@@ -174,5 +203,4 @@ class OrderController extends Controller
             'tile' => $order
         ], 200);
     }
-
 }
