@@ -105,32 +105,70 @@ class OrderController extends Controller
     //     }
     // }
 
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'name' => 'required',
+    //         'email' => 'required|email',
+    //         'phone_number' => 'required',
+    //         'message' => 'nullable',
+    //         'tile_name' => 'required',
+    //         'grout_color' => 'nullable',
+    //         'grout_thickness' => 'nullable',
+    //         'grid_category' => 'nullable',
+    //         'quantity_needed' => 'required|integer',
+    //         'quantity_unit' => 'nullable|string',
+    //         'referred_by' => 'nullable|string',
+    //         'other_specify' => 'nullable|string',
+    //         'rotations' => 'nullable|array',
+    //         'svg_base64' => 'nullable|string',
+    //     ]);
+
+    //     $order = Order::create([
+    //         ...$validated,
+    //         'rotations' => json_encode($validated['rotations'] ?? []),
+    //     ]);
+
+    //     return response()->json(['message' => 'Order placed successfully', 'order' => $order], 201);
+    // }
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'phone_number' => 'required',
-            'message' => 'nullable',
-            'tile_name' => 'required',
-            'grout_color' => 'nullable',
-            'grout_thickness' => 'nullable',
-            'grid_category' => 'nullable',
-            'quantity_needed' => 'required|integer',
-            'quantity_unit' => 'nullable|string',
-            'referred_by' => 'nullable|string',
-            'other_specify' => 'nullable|string',
-            'rotations' => 'nullable|array',
-            'svg_base64' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required',
+                'email' => 'required|email',
+                'phone_number' => 'required',
+                'message' => 'nullable',
+                'tile_name' => 'required',
+                'grout_color' => 'nullable',
+                'grout_thickness' => 'nullable',
+                'grid_category' => 'nullable',
+                'quantity_needed' => 'required|integer',
+                'quantity_unit' => 'nullable|string',
+                'referred_by' => 'nullable|string',
+                'other_specify' => 'nullable|string',
+                'rotations' => 'nullable|array',
+                'svg_base64' => 'nullable|string',
+            ]);
 
-        $order = Order::create([
-            ...$validated,
-            'rotations' => json_encode($validated['rotations'] ?? []),
-        ]);
+            $order = Order::create([
+                ...$validated,
+                'rotations' => json_encode($validated['rotations'] ?? []),
+            ]);
 
-        return response()->json(['message' => 'Order placed successfully', 'order' => $order], 201);
+            return response()->json([
+                'message' => 'Order placed successfully',
+                'order' => $order
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to place order',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
 
 
