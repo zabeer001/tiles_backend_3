@@ -5,6 +5,7 @@ use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 
 class OrderController extends Controller
@@ -80,7 +81,7 @@ class OrderController extends Controller
     }
     public function store(StoreOrderRequest $request)
     {
-        dd($request);
+        // dd($request);
         try {
             $order = Order::create($request->validated());
 
@@ -90,7 +91,7 @@ class OrderController extends Controller
                 201
             );
         } catch (\Exception $e) {
-            \Log::error('Error creating order: ' . $e->getMessage(), [
+            Log::error('Error creating order: ' . $e->getMessage(), [
                 'request_data' => $request->all(),
                 'error' => $e->getTraceAsString(),
             ]);
@@ -109,7 +110,7 @@ class OrderController extends Controller
         try {
             return $this->responseSuccess($order, 'Order retrieved successfully');
         } catch (\Exception $e) {
-            \Log::error('Error fetching order: ' . $e->getMessage(), [
+            Log::error('Error fetching order: ' . $e->getMessage(), [
                 'order_id' => $order->id,
                 'error' => $e->getTraceAsString(),
             ]);
@@ -125,7 +126,7 @@ class OrderController extends Controller
 
             return $this->responseSuccess($order, 'Order updated successfully');
         } catch (\Exception $e) {
-            \Log::error('Error updating order: ' . $e->getMessage(), [
+            Log::error('Error updating order: ' . $e->getMessage(), [
                 'order_id' => $order->id,
                 'request_data' => $request->all(),
                 'error' => $e->getTraceAsString(),
@@ -142,7 +143,7 @@ class OrderController extends Controller
 
             return $this->responseSuccess(null, 'Order deleted successfully');
         } catch (\Exception $e) {
-            \Log::error('Error deleting order: ' . $e->getMessage(), [
+            Log::error('Error deleting order: ' . $e->getMessage(), [
                 'order_id' => $order->id,
                 'error' => $e->getTraceAsString(),
             ]);
