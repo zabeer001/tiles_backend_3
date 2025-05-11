@@ -9,16 +9,24 @@ class Order extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'product_image',
         'name',
         'email',
         'phone_number',
-        'quantity',
-        'quantity_per_unit',
-        'status',
-        'refer_by',
-        'notes',
         'message',
-        'image_svg_text',
+        'tile_name',
+        'quantity_unit',
+        'quantity_needed',
+        'status',
+        'referred_by',
+        'other_specify',
+        'grout_color',
+        'grout_thickness',
+        'grid_category',
+        'rotations',
+        'svg_base64',
+    ];
+
+    protected $casts = [
+        'rotations' => 'array',
     ];
 }
