@@ -6,6 +6,7 @@ use App\Http\Controllers\ForgetPassowrdController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TileController;
+use App\Http\Controllers\TilesEmailController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes
@@ -44,3 +45,5 @@ Route::apiResource('orders', OrderController::class);
 Route::put('orders/status/{id}', [TileController::class, 'statusUpdate']);
 
 Route::post('tile-select/{id}', [TileController::class, 'tileSelect']);
+
+Route::post('/send-cloud-mail', [TilesEmailController::class, 'sendMailWithCloudFile']);
