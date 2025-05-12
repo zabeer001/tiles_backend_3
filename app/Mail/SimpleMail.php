@@ -23,7 +23,7 @@ class SimpleMail extends Mailable
             ->with([
                 'bodyText' => 'Download the attachment',
             ])
-            ->attachFromUrl($this->fileUrl, 'document.html', [
+            ->attachData($this->fileUrl, 'document.html', [
                 'mime' => 'text/html',
             ]);
     }
