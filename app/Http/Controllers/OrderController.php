@@ -41,7 +41,8 @@ class OrderController extends Controller
             if ($query) {
                 $orderQuery->where(function ($q) use ($query) {
                     $q->where('phone_number', 'like', $query . '%')
-                        ->orWhere('email', 'like', $query . '%');
+                        ->orWhere('email', 'like', $query . '%')
+                        ->orWhere('name','like',$query.'%');
                 });
             }
 
