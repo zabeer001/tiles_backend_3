@@ -18,12 +18,36 @@ class ColorController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // return 'hi';
-        // return 'zabeer';
+        $validated = $request->validate([
+            'paginate_count' => 'nullable|integer|min:1',
+            'query' => 'nullable|string|max:255',
+            'status' => 'nullable|string|max:255',
+        ]);
+
+        $paginate_count = $validated['paginate_count'] ?? 10;
+        $query = $validated['query'] ?? null;
+        $status = $validated['status'] ?? null;
+
         try {
-            $colors = Color::paginate(10);
+           
+
+            $colorQuery = Color::query();
+
+            if ($query) {
+                $colorQuery->where(function ($q) use ($query) {
+                    $q->where('name', 'like', $query . '%')
+                        ->orWhere('code', 'like', $query . '%');
+                });
+            }
+            
+            if ($status) {
+                $colorQuery->where('status', 'like', $status . '%');
+            }
+
+            $colors = $colorQuery->paginate($paginate_count);
+
             return response()->json([
                 'data' => $colors,
                 'current_page' => $colors->currentPage(),

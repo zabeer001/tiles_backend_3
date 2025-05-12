@@ -1,44 +1,244 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Order\StoreOrderRequest;
 use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 
 class OrderController extends Controller
 {
+
+    public function __construct()
+    {
+        // Apply JWT authentication middleware only to store, update, and destroy methods
+        $this->middleware('auth:api')->only(['update', 'destroy', 'statusUpdate']);
+    }
+
+
     public function index(Request $request)
     {
+        // Validate query parameters
         $validated = $request->validate([
             'paginate_count' => 'nullable|integer|min:1',
+            'query' => 'nullable|string|max:255',
+            'status' => 'nullable|string|max:255',
         ]);
+
+        // Get query parameters
         $paginate_count = $validated['paginate_count'] ?? 10;
+        $query = $validated['query'] ?? null;
+        $status = $validated['status'] ?? null;
 
-        return response()->json(Order::paginate($paginate_count)); 
+        try {
+            // Build the query
+            $orderQuery = Order::query();
+
+            // Apply search filter
+            if ($query) {
+                $orderQuery->where(function ($q) use ($query) {
+                    $q->where('phone_number', 'like', $query . '%')
+                        ->orWhere('email', 'like', $query . '%');
+                });
+            }
+
+
+            if ($status) {
+                $orderQuery->where('status', 'like', $status . '%');
+            }
+
+            // Paginate the result
+            $orders = $orderQuery->paginate($paginate_count);
+
+            // Check if any data was returned
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No orders found',
+                    'data' => [],
+                ], 404);
+            }
+
+            // Return with pagination meta
+            return response()->json([
+                'success' => true,
+                'message' => 'Orders retrieved successfully',
+                'data' => $orders,
+                'current_page' => $orders->currentPage(),
+                'total_pages' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch orders.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
+    // public function store(StoreOrderRequest $request)
+    // {
+    //     // dd($request);
+    //     try {
+    //         $order = Order::create($request->validated());
 
-    public function store(StoreOrderRequest $request)
+    //         return $this->responseSuccess(
+    //             $order, // You can use $order->load([...]) if you want related models
+    //             'Order created successfully',
+    //             201
+    //         );
+    //     } catch (\Exception $e) {
+    //         Log::error('Error creating order: ' . $e->getMessage(), [
+    //             'request_data' => $request->all(),
+    //             'error' => $e->getTraceAsString(),
+    //         ]);
+
+    //         return $this->responseError(
+    //             'Something went wrong while creating the order',
+    //             $e->getMessage(),
+    //             500
+    //         );
+    //     }
+    // }
+
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'name' => 'required',
+    //         'email' => 'required|email',
+    //         'phone_number' => 'required',
+    //         'message' => 'nullable',
+    //         'tile_name' => 'required',
+    //         'grout_color' => 'nullable',
+    //         'grout_thickness' => 'nullable',
+    //         'grid_category' => 'nullable',
+    //         'quantity_needed' => 'required|integer',
+    //         'quantity_unit' => 'nullable|string',
+    //         'referred_by' => 'nullable|string',
+    //         'other_specify' => 'nullable|string',
+    //         'rotations' => 'nullable|array',
+    //         'svg_base64' => 'nullable|string',
+    //     ]);
+
+    //     $order = Order::create([
+    //         ...$validated,
+    //         'rotations' => json_encode($validated['rotations'] ?? []),
+    //     ]);
+
+    //     return response()->json(['message' => 'Order placed successfully', 'order' => $order], 201);
+    // }
+
+    public function store(Request $request)
     {
-        $order = Order::create($request->validated());
-        return response()->json($order, 201);
+        try {
+            $validated = $request->validate([
+                'name' => 'required',
+                'email' => 'required|email',
+                'phone_number' => 'required',
+                'message' => 'nullable',
+                'tile_name' => 'required',
+                'grout_color' => 'nullable',
+                'grout_thickness' => 'nullable',
+                'grid_category' => 'nullable',
+                'quantity_needed' => 'required|integer',
+                'quantity_unit' => 'nullable|string',
+                'referred_by' => 'nullable|string',
+                'other_specify' => 'nullable|string',
+                'rotations' => 'nullable|array',
+                'svg_base64' => 'nullable',
+            ]);
+
+            $order = Order::create([
+                ...$validated,
+                'rotations' => json_encode($validated['rotations'] ?? []),
+            ]);
+
+            return response()->json([
+                'message' => 'Order placed successfully',
+                'order' => $order
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to place order',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
+
+
 
     public function show(Order $order)
     {
-        return response()->json($order);
+        try {
+            return $this->responseSuccess($order, 'Order retrieved successfully');
+        } catch (\Exception $e) {
+            Log::error('Error fetching order: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'error' => $e->getTraceAsString(),
+            ]);
+
+            return $this->responseError('Failed to retrieve order', $e->getMessage(), 500);
+        }
     }
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
-        $order->update($request->validated());
-        return response()->json($order);
+        try {
+            $order->update($request->validated());
+
+            return $this->responseSuccess($order, 'Order updated successfully');
+        } catch (\Exception $e) {
+            Log::error('Error updating order: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'request_data' => $request->all(),
+                'error' => $e->getTraceAsString(),
+            ]);
+
+            return $this->responseError('Failed to update order', $e->getMessage(), 500);
+        }
     }
 
     public function destroy(Order $order)
     {
-        $order->delete();
-        return response()->json(['message' => 'Order deleted successfully.']);
+        try {
+            $order->delete();
+
+            return $this->responseSuccess(null, 'Order deleted successfully');
+        } catch (\Exception $e) {
+            Log::error('Error deleting order: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'error' => $e->getTraceAsString(),
+            ]);
+
+            return $this->responseError('Failed to delete order', $e->getMessage(), 500);
+        }
+    }
+
+    public function statusUpdate(Request $request, $id)
+    {
+        // dd($request);
+        // Validate the incoming status
+        $request->validate([
+            'status' => 'required|string' // Adjust allowed values as needed
+        ]);
+
+        // Find the category by ID
+        $order = Order::findOrFail($id);
+
+        // Update the status
+        $order->status = $request->input('status');
+        $order->save();
+
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Category status updated successfully',
+            'tile' => $order
+        ], 200);
     }
 }

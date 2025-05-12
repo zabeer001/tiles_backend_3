@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tile;
 use Illuminate\Http\Request;
 use App\Helpers\HelperMethods;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TileController extends Controller
@@ -12,7 +13,7 @@ class TileController extends Controller
     public function __construct()
     {
         // Apply JWT authentication middleware only to store, update, and destroy methods
-        $this->middleware('auth:api')->only(['store', 'update', 'destroy']);
+        $this->middleware('auth:api')->only(['store', 'update', 'destroy', 'statusUpdate']);
     }
 
     // public function index(Request $request)
@@ -77,6 +78,46 @@ class TileController extends Controller
     //     ], 200);
     // }
 
+    public function tileSelect(Request $request, $id)
+    {
+        $data = DB::select("
+        SELECT 
+            c.id AS category_id,
+            c.name AS category_name,
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'tile_id', t.id,
+                    'name', t.name,
+                    'description', t.description,
+                    'grid_category', t.grid_category,
+                    'image', t.image,
+                    'image_svg_text', t.image_svg_text,
+                    'status', t.status
+                )
+            ) AS tiles
+        FROM categories c
+        JOIN category_tiles ct ON c.id = ct.category_id
+        JOIN tiles t ON t.id = ct.tile_id
+        WHERE c.id = ?
+        GROUP BY c.id, c.name
+    ", [$id]);
+
+        if (empty($data)) {
+            return response()->json(['message' => 'No tiles found for this category'], 404);
+        }
+
+        $formatted = collect($data)->map(function ($item) {
+            return [
+                'category_id' => $item->category_id,
+                'category_name' => $item->category_name,
+                'tiles' => json_decode($item->tiles, true),
+            ];
+        });
+
+        return response()->json($formatted->first()); // Return single category
+    }
+
+
     public function index(Request $request)
     {
         // Validate query parameters
@@ -85,6 +126,7 @@ class TileController extends Controller
             'search' => 'nullable|string|max:255',
             'category' => 'nullable|string|exists:categories,name',
             'color' => 'nullable|string|exists:colors,name',
+            'status' => 'nullable|string|max:255',
         ]);
 
         // Get query parameters
@@ -92,6 +134,7 @@ class TileController extends Controller
         $search = $validated['search'] ?? null;
         $category = $validated['category'] ?? null;
         $color = $validated['color'] ?? null;
+        $status = $validated['status'] ?? null;
 
         try {
             // Build the query
@@ -115,6 +158,11 @@ class TileController extends Controller
                     $q->where('name', $color);
                 });
             }
+
+            if ($status) {
+                $query->where('status', 'like', $status . '%');
+            }
+
 
             // Paginate the result
             $tiles = $query->paginate($paginate_count);
@@ -160,7 +208,8 @@ class TileController extends Controller
             'name' => 'required|string|max:255',
             'grid_category' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10 MB = 10240 KB
+            'image_svg_text' => 'nullable',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
             'color_id' => 'nullable|array',
@@ -179,6 +228,7 @@ class TileController extends Controller
                 'name' => $validated['name'],
                 'grid_category' => $validated['grid_category'],
                 'description' => $validated['description'],
+                'image_svg_text' => $validated['image_svg_text'],
                 'image' => $imagePath,
             ]);
 
@@ -238,7 +288,7 @@ class TileController extends Controller
                     $dValues[] = (string)$path['d'];
                 }
 
-              
+
 
 
                 $tile->svg_inline = $dValues;
@@ -296,7 +346,8 @@ class TileController extends Controller
             'name' => 'required|string|max:255',
             'grid_category' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg|max:10240', // 10 MB = 10240 KB
+            'image_svg_text' => 'nullable|string|max:5120',
             'status' => 'nullable|string|max:255',
             'category_id' => 'required|array',
             'category_id.*' => 'exists:categories,id',
@@ -313,6 +364,7 @@ class TileController extends Controller
                 'name' => $validated['name'],
                 'grid_category' => $validated['grid_category'],
                 'description' => $validated['description'],
+                'image_svg_text' => $validated['image_svg_text'],
                 'image' => $imagePath,
             ];
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\ForgetPassowrdController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TileController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,8 +13,15 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::get('me', [AuthController::class, 'me'])->middleware('auth:api');
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
-Route::post('send-reset-email-link', [ForgetPassowrdController::class, 'sendResetEmailLink']);
-Route::post('reset-password', [ForgetPassowrdController::class, 'resetPassword']);
+
+/* create by abu sayed (start)*/ 
+
+Route::post('password/email', [AuthController::class, 'sendResetEmailLink']);
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.reset');
+
+
+
+/* create by abu sayed (end)*/ 
 
 // Protected routes
 
@@ -33,3 +41,6 @@ Route::put('tiles/status/{id}', [TileController::class, 'statusUpdate']);
 
 //orders
 Route::apiResource('orders', OrderController::class);
+Route::put('orders/status/{id}', [TileController::class, 'statusUpdate']);
+
+Route::post('tile-select/{id}', [TileController::class, 'tileSelect']);

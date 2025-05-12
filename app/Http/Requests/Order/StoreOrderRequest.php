@@ -9,10 +9,7 @@ class StoreOrderRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize(): bool
-    {
-        return false;
-    }
+    
 
     /**
      * Get the validation rules that apply to the request.
@@ -23,6 +20,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'product_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'image_svg_text' => 'nullable|string',
             'name' => 'required|string',
             'email' => 'required|email',
             'phone_number' => 'required|string',
