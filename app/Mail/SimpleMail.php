@@ -21,10 +21,7 @@ class SimpleMail extends Mailable
         return $this->view('emails.simple')
             ->subject('Custom Tiles Image')
             ->with([
-                'bodyText' => 'Download the attachment',
-            ])
-            ->attachData($this->fileUrl, 'document.html', [
-                'mime' => 'text/html',
+                'fileUrl' => $this->fileUrl,
             ]);
     }
 }

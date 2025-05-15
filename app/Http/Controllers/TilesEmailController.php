@@ -14,7 +14,10 @@ class TilesEmailController extends Controller
             'file_url' => 'required|url',
         ]);
 
-        Mail::to($request->email)->send(new SimpleMail($request->file_url));
+        $email = $request->email;
+        $fileUrl = $request->file_url;
+
+        Mail::to($email)->send(new SimpleMail($fileUrl));
 
         return response()->json(['message' => 'Email sent successfully.']);
     }

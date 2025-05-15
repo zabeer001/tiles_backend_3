@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+    <title>Image Link</title>
+</head>
+
 <body>
-    <p>{{ $bodyText }}</p>
+    <p>Here is your image link:</p>
+    <p><a href="{{ $fileUrl }}">{{ $fileUrl }}</a></p>
 </body>
 
 </html>
