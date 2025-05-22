@@ -165,7 +165,7 @@ class TileController extends Controller
 
 
             // Paginate the result
-            $tiles = $query->paginate($paginate_count);
+            $tiles = $query->paginate($paginate_count)->makeHidden(['image_svg_text']);
 
             // Check if any data was returned
             if ($tiles->isEmpty()) {
@@ -285,7 +285,7 @@ class TileController extends Controller
 
                 $dValues = [];
                 foreach ($paths as $path) {
-                    $dValues[] = (string)$path['d'];
+                    $dValues[] = (string) $path['d'];
                 }
 
 
