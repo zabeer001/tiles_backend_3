@@ -166,11 +166,9 @@ class TileController extends Controller
 
             // Paginate the result
             // $tiles = $query->paginate($paginate_count)->makeHidden(['image_svg_text']);
-
             $tiles = $query->paginate($paginate_count);
-$tiles->getCollection()->transform(function ($tile) {
-    return $tile->makeHidden(['image_svg_text']);
-});
+
+
 
             // Check if any data was returned
             if ($tiles->isEmpty()) {
